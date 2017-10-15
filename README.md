@@ -1,4 +1,5 @@
 # The Vital Franchise by Negative Three
+> Join our Discord https://discord.gg/YMgQ5rw
 
 ## Vital
 Vital is a top down bullet hell with randomly generated dungeons, defeat all the enemies to move on to the next room and loot the deepest of the dungeons.
