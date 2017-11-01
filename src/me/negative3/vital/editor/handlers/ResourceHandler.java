@@ -20,6 +20,7 @@ public class ResourceHandler {
 		add("floor_tile", "art/floor", new Color(128, 0, 128));
 		add("enemy_spawn_tile", "art/editor/enemy_spawn", new Color(255, 1, 1));
 		add("player_spawn_tile", "art/editor/player_spawn", new Color(255, 255, 255));
+		add("lava_tile", "art/lava/lava_anim_0", new Color(255, 2, 2));
 	}
 
 	public void add(String id, String link, Color color) {
@@ -36,9 +37,9 @@ public class ResourceHandler {
 	public BufferedImage get(int index) {
 		return images.get(index);
 	}
-	
+
 	public BufferedImage get(Color color) {
-		if (color != new Color(0,0,0,0)) {
+		if (color != new Color(0, 0, 0, 0)) {
 			if (!colors.contains(color)) {
 				// System.out.println("\"" + color.getRGB() + "\" is not an image color");
 				return null;

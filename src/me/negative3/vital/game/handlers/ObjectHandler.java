@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import me.negative3.vital.game.Game;
 import me.negative3.vital.game.framework.GameObject;
 import me.negative3.vital.game.objects.Player;
+import me.negative3.vital.library.framework.GameState;
 import me.negative3.vital.library.framework.ObjectId;
 
 public class ObjectHandler {
@@ -66,6 +67,7 @@ public class ObjectHandler {
 					game.resetLevel();
 					player.reset();
 					player.setDead(false);
+					game.setState(GameState.MENU);
 				}
 			}
 		}

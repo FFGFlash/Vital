@@ -16,8 +16,10 @@ public class Tile extends GameObject {
 	private BufferedImage image = null;
 	private LevelHandler levelHandler;
 	protected LinkedList<BufferedImage> tiles = new LinkedList<>();
+	protected BufferedImage[] animation = null;
 	private int enemies;
 	private boolean active = false;
+	protected int ticks = 0, frames = 0;
 
 	public Tile(double x, double y, int width, int height, ObjectId objectId, Game game) {
 		super(x, y, width, height, objectId, game);
@@ -97,6 +99,9 @@ public class Tile extends GameObject {
 		case FLOOR_TILE:
 			image = game.getResourceHandler().get("floor_tile");
 			break;
+		case LAVA_TILE:
+			animation = game.getResourceHandler().getFrames("lava");
+			break;
 		default:
 			image = null;
 			break;
@@ -133,15 +138,28 @@ public class Tile extends GameObject {
 				}
 			}
 		}
+
+		if (ticks % 10 == 0) {
+			frames++;
+		}
+
+		ticks++;
 	}
 
 	@Override
 	public void paintComponent(Graphics g) {
+		if (animation != null) {
+			image = animation[frames % animation.length];
+		}
+
 		if (objectId == ObjectId.BUILDER_TILE) {
 			g.setColor(Color.PINK);
 			g.fillRect((int) x, (int) y, width, height);
-		} else {
+		} else if (image != null) {
 			g.drawImage(image, (int) x, (int) y, width, height, null);
+		} else {
+			g.setColor(new Color(frames));
+			g.fillRect((int) x, (int) y, width, height);
 		}
 	}
 

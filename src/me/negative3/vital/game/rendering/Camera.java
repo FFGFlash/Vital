@@ -37,6 +37,16 @@ public class Camera {
 				r -= .0002 * game.getCombo();
 			}
 		}
+
+		if (r < 0) {
+			r += .0002;
+		} else if (r > 0) {
+			r -= .0002;
+		}
+		
+		if (r < .01 && r > -.01 && game.getCombo() == 0) {
+			r = 0;
+		}
 	}
 
 	public float getX() {

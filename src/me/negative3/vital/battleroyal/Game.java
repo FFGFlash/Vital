@@ -58,7 +58,7 @@ public class Game extends JPanel
 		ticks++;
 
 		for (int i = 0; i < pixels.length; i++) {
-			pixels[i] = i * ticks;
+			pixels[i] = (int)(Math.floor(i / main.getWidth()) * main.getWidth()) * ticks;
 		}
 	}
 

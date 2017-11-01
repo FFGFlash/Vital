@@ -29,7 +29,7 @@ public class Game extends JPanel
 	private Camera camera;
 	private ResourceHandler rh;
 	private boolean running = false, vsync = true, keys[] = new boolean[5000], buttons[] = new boolean[5000];
-	private int mousePosition[] = { 0, 0 }, blockSize = 64, pixels[], selected = 0, levelSize[] = { 32, 32 };
+	private int mousePosition[] = { 0, 0 }, blockSize = 64, pixels[], selected = 0, levelSize[] = { 32, 32 }, ticks = 0;
 	private double position[] = { 0, 0 };
 	private BufferedImage level, selectedTile;
 	private Color selectedColor;
@@ -77,6 +77,7 @@ public class Game extends JPanel
 		long lastTime = System.nanoTime(), timer = System.currentTimeMillis();
 		double amountOfTicks = 60.0, ns = 1000000000 / amountOfTicks, delta = 0;
 		int updates = 0, frames = 0;
+		boolean limit = true;
 
 		while (running) {
 			long now = System.nanoTime();
@@ -85,10 +86,16 @@ public class Game extends JPanel
 
 			boolean render = false;
 
-			while (delta >= 1) {
+			if (limit) {
+				while (delta >= 1) {
+					update();
+					updates++;
+					delta--;
+					render = true;
+				}
+			} else {
 				update();
 				updates++;
-				delta--;
 				render = true;
 			}
 
@@ -128,6 +135,60 @@ public class Game extends JPanel
 		}
 
 		camera.update(position[0], position[1]);
+
+		boolean[] scale = { keys[KeyEvent.VK_UP], keys[KeyEvent.VK_LEFT], keys[KeyEvent.VK_DOWN],
+				keys[KeyEvent.VK_RIGHT] };
+
+		if (ticks % 5 == 0 && (scale[0] || scale[1] || scale[2] || scale[3])) {
+
+			int newLevelSize[] = { levelSize[0], levelSize[1] };
+
+			if (scale[0]) {
+				newLevelSize[1] -= 1;
+			} else if (scale[2]) {
+				newLevelSize[1] += 1;
+			}
+
+			if (scale[1]) {
+				newLevelSize[0] -= 1;
+			} else if (scale[3]) {
+				newLevelSize[0] += 1;
+			}
+
+			if (newLevelSize[0] != levelSize[0] || newLevelSize[1] != levelSize[1]) {
+				if (newLevelSize[0] <= 0) {
+					newLevelSize[0] = 1;
+				}
+				if (newLevelSize[1] <= 0) {
+					newLevelSize[1] = 1;
+				}
+				BufferedImage newLevel = new BufferedImage(newLevelSize[0], newLevelSize[1],
+						BufferedImage.TYPE_INT_ARGB);
+				int newPixels[] = new int[newLevel.getWidth() * newLevel.getHeight()];
+				for (int x = 0; x < newLevel.getWidth(); x++) {
+					for (int y = 0; y < newLevel.getHeight(); y++) {
+						int spacingWidth = newLevel.getWidth() - level.getWidth();
+						int spacingHeight = newLevel.getHeight() - level.getHeight();
+						if (x < newLevel.getWidth() - spacingWidth && y < newLevel.getHeight() - spacingHeight) {
+							newPixels[x + y * newLevel.getWidth()] = pixels[x + y * level.getWidth()];
+						} else {
+							newPixels[x + y * newLevel.getWidth()] = newLevel.getRGB(x, y);
+						}
+					}
+				}
+				newLevel.setRGB(0, 0, newLevel.getWidth(), newLevel.getHeight(), newPixels, 0, newLevel.getWidth());
+				level = newLevel;
+				pixels = newPixels;
+				levelSize = newLevelSize;
+			}
+		}
+
+		if (scale[0] || scale[1] || scale[2] || scale[3]) {
+			ticks++;
+		} else {
+			ticks = 0;
+		}
+
 		boolean[] move = { keys[KeyEvent.VK_W], keys[KeyEvent.VK_A], keys[KeyEvent.VK_S], keys[KeyEvent.VK_D] };
 
 		if (move[0]) {
@@ -177,7 +238,6 @@ public class Game extends JPanel
 			}
 		}
 		level.setRGB(0, 0, level.getWidth(), level.getHeight(), newPixels, 0, level.getWidth());
-
 	}
 
 	@Override
@@ -232,6 +292,11 @@ public class Game extends JPanel
 		for (int i = 0; i < controls.length; i++) {
 			g.drawString(controls[i], x, y + 30 * i);
 		}
+
+		g.drawString("[" + levelSize[0] + ", " + levelSize[1] + "]", mapSize + 5, main.getHeight() - 45);
+		g.drawString("[" + (getDrawPosition()[0] / blockSize + 1) + ", " + (getDrawPosition()[1] / blockSize + 1) + "]",
+				mapSize + 5, main.getHeight() - 15);
+
 		g.dispose();
 	}
 
@@ -289,43 +354,6 @@ public class Game extends JPanel
 		int key = e.getKeyCode();
 		keys[key] = true;
 
-		boolean[] scale = { keys[KeyEvent.VK_UP], keys[KeyEvent.VK_LEFT], keys[KeyEvent.VK_DOWN],
-				keys[KeyEvent.VK_RIGHT] };
-
-		int newLevelSize[] = { levelSize[0], levelSize[1] };
-
-		if (scale[0]) {
-			newLevelSize[1]-=1;
-		} else if (scale[2]) {
-			newLevelSize[1]+=1;
-		}
-
-		if (scale[1]) {
-			newLevelSize[0]-=1;
-		} else if (scale[3]) {
-			newLevelSize[0]+=1;
-		}
-
-		if (newLevelSize[0] != levelSize[0] || newLevelSize[1] != levelSize[1]) {
-			BufferedImage newLevel = new BufferedImage(newLevelSize[0], newLevelSize[1], BufferedImage.TYPE_INT_ARGB);
-			int newPixels[] = new int[newLevel.getWidth() * newLevel.getHeight()];
-			for (int x = 0; x < newLevel.getWidth(); x++) {
-				for (int y = 0; y < newLevel.getHeight(); y++) {
-					int spacingWidth = newLevel.getWidth() - level.getWidth();
-					int spacingHeight = newLevel.getHeight() - level.getHeight();
-					if (x < newLevel.getWidth() - spacingWidth && y < newLevel.getHeight() - spacingHeight) {
-						newPixels[x + y * newLevel.getWidth()] = pixels[x + y * level.getWidth()];
-					} else {
-						newPixels[x + y * newLevel.getWidth()] = newLevel.getRGB(x, y);
-					}
-				}
-			}
-			newLevel.setRGB(0, 0, newLevel.getWidth(), newLevel.getHeight(), newPixels, 0, newLevel.getWidth());
-			level = newLevel;
-			pixels = newPixels;
-			levelSize = newLevelSize;
-		}
-
 		if (key == KeyEvent.VK_ESCAPE) {
 			System.exit(0);
 		} else if (key == KeyEvent.VK_F1) {
@@ -355,6 +383,12 @@ public class Game extends JPanel
 				ImageIO.write(exportedLevel, "png", new File("level.png"));
 			} catch (IOException ex) {
 				ex.printStackTrace();
+			}
+		} else if (key == KeyEvent.VK_F2) {
+			if (vsync) {
+				vsync = false;
+			} else {
+				vsync = true;
 			}
 		}
 	}

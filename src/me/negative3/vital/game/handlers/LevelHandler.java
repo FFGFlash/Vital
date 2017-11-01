@@ -7,6 +7,7 @@ import java.util.LinkedList;
 
 import me.negative3.vital.game.Game;
 import me.negative3.vital.game.framework.GameObject;
+import me.negative3.vital.game.objects.Chest;
 import me.negative3.vital.game.objects.Enemy;
 import me.negative3.vital.game.objects.Tile;
 import me.negative3.vital.library.framework.ObjectId;
@@ -43,6 +44,7 @@ public class LevelHandler {
 				pixels[x + y * width] = blank;
 			}
 		}
+
 		int moves = randInt(400, 800);
 		if (width * height / 2 > 800) {
 			moves = randInt(400, width * height / 2); // find room size and corresponding move count
@@ -52,24 +54,24 @@ public class LevelHandler {
 
 		// Builder
 		for (int ii = 0; ii < moves; ii++) {
-			int i = randInt(1, 3); // the chance to move either on the x or y axis
-			if (i == 1) {
-				builder[0] += choices[randInt(0, 2)];
-			} else if (i == 2) {
-				builder[1] += choices[randInt(0, 2)];
-			}
-			if (builder[0] >= width) {
+			builder[randInt(0, 2)] += choices[randInt(0, 2)]; // Moves randomly on either the x or y axis and then
+																// positively or negatively
+
+			// Check if x is out of bounds
+			if (builder[0] > width - 1) {
 				builder[0] = width - 1;
 			} else if (builder[0] < 0) {
 				builder[0] = 0;
 			}
-			if (builder[1] >= height) {
+
+			// Check if y is out of bounds
+			if (builder[1] > height - 1) {
 				builder[1] = height - 1;
 			} else if (builder[1] < 0) {
 				builder[1] = 0;
 			}
 
-			// Set the passable tiles at builder position
+			// Place floor tile color codes at builder x and builder y
 			newPixels = new int[width * height];
 			for (int x = 0; x < width; x++) {
 				for (int y = 0; y < height; y++) {
@@ -207,6 +209,66 @@ public class LevelHandler {
 		}
 		pixels = newPixels;
 
+		// Place Health Chest
+		boolean spawned = false;
+		newPixels = new int[width * height];
+		for (int x = 0; x < width; x++) {
+			for (int y = 0; y < height; y++) {
+				if (pixels[x + y * width] == builderId && (x >= spawnCoords[0] + 5 || x <= spawnCoords[0] - 5)
+						&& (y >= spawnCoords[1] + 5 || y <= spawnCoords[1] - 5)) {
+					if (randInt(0, 100) >= 98 && !spawned) {
+						newPixels[x + y * width] = new Color(255, 255, 0).getRGB();
+						spawned = true;
+					} else {
+						newPixels[x + y * width] = pixels[x + y * width];
+					}
+				} else {
+					newPixels[x + y * width] = pixels[x + y * width];
+				}
+			}
+		}
+		pixels = newPixels;
+
+		// Place Ammo Chest
+		spawned = false;
+		newPixels = new int[width * height];
+		for (int x = 0; x < width; x++) {
+			for (int y = 0; y < height; y++) {
+				if (pixels[x + y * width] == builderId && (x >= spawnCoords[0] + 5 || x <= spawnCoords[0] - 5)
+						&& (y >= spawnCoords[1] + 5 || y <= spawnCoords[1] - 5)) {
+					if (randInt(0, 100) >= 98 && !spawned) {
+						newPixels[x + y * width] = new Color(255, 255, 1).getRGB();
+						spawned = true;
+					} else {
+						newPixels[x + y * width] = pixels[x + y * width];
+					}
+				} else {
+					newPixels[x + y * width] = pixels[x + y * width];
+				}
+			}
+		}
+		pixels = newPixels;
+
+		// Place Weapon Chest
+		spawned = false;
+		newPixels = new int[width * height];
+		for (int x = 0; x < width; x++) {
+			for (int y = 0; y < height; y++) {
+				if (pixels[x + y * width] == builderId && (x >= spawnCoords[0] + 5 || x <= spawnCoords[0] - 5)
+						&& (y >= spawnCoords[1] + 5 || y <= spawnCoords[1] - 5)) {
+					if (randInt(0, 100) >= 98 && !spawned) {
+						newPixels[x + y * width] = new Color(255, 255, 2).getRGB();
+						spawned = true;
+					} else {
+						newPixels[x + y * width] = pixels[x + y * width];
+					}
+				} else {
+					newPixels[x + y * width] = pixels[x + y * width];
+				}
+			}
+		}
+		pixels = newPixels;
+
 		// Get exit door coordinates
 		int[] doorCoords = new int[] { 0, 0 };
 		for (int x = 0; x < width; x++) {
@@ -264,6 +326,9 @@ public class LevelHandler {
 				int pixel = pixels[x + y * size[0]];
 				int ax = (game.getMain().getWidth() / 2 - size[0] * blockSize / 2) + x * blockSize;
 				int ay = (game.getMain().getHeight() / 2 - size[1] * blockSize / 2) + y * blockSize;
+
+				int chestSize = (int) (blockSize * .6);
+
 				if (checkRGB(pixel, 0, 0, 255)) {
 					levelObjects.add(new Tile(ax, ay, blockSize, blockSize, ObjectId.NORMAL_TILE, game));
 				} else if (checkRGB(pixel, 255, 255, 255)) {
@@ -287,8 +352,25 @@ public class LevelHandler {
 					levelObjects.add(new Tile(ax, ay, blockSize, blockSize, ObjectId.CORNER_TILE, game));
 				} else if (checkRGB(pixel, 255, 1, 1)) {
 					levelObjects.add(new Tile(ax, ay, blockSize, blockSize, ObjectId.FLOOR_TILE, game));
-					levelObjects.add(new Enemy(ax, ay, 24, 24, ObjectId.ENEMY, game));
+					levelObjects.add(new Enemy(ax, ay, 128, 128, ObjectId.ENEMY, game));
 					enemies++;
+				} else if (checkRGB(pixel, 255, 2, 2)) {
+					levelObjects.add(new Tile(ax, ay, blockSize, blockSize, ObjectId.LAVA_TILE, game));
+				} else if (checkRGB(pixel, 255, 255, 0)) {
+					// Health chest
+					levelObjects.add(new Tile(ax, ay, blockSize, blockSize, ObjectId.FLOOR_TILE, game));
+					levelObjects.add(new Chest(ax + (blockSize / 2 - chestSize / 2),
+							ay + (blockSize / 2 - chestSize / 2), chestSize, chestSize, ObjectId.CHEST, game, 0));
+				} else if (checkRGB(pixel, 255, 255, 1)) {
+					// Ammo chest
+					levelObjects.add(new Tile(ax, ay, blockSize, blockSize, ObjectId.FLOOR_TILE, game));
+					levelObjects.add(new Chest(ax + (blockSize / 2 - chestSize / 2),
+							ay + (blockSize / 2 - chestSize / 2), chestSize, chestSize, ObjectId.CHEST, game, 1));
+				} else if (checkRGB(pixel, 255, 255, 2)) {
+					// Weapon chest
+					levelObjects.add(new Tile(ax, ay, blockSize, blockSize, ObjectId.FLOOR_TILE, game));
+					levelObjects.add(new Chest(ax + (blockSize / 2 - chestSize / 2),
+							ay + (blockSize / 2 - chestSize / 2), chestSize, chestSize, ObjectId.CHEST, game, 2));
 				}
 			}
 		}
@@ -339,7 +421,7 @@ public class LevelHandler {
 				} else if (pixels[x + y * size[0]] == new Color(0, 0, 0).getRGB()) {
 					newPixels[x + y * size[0]] = new Color(0, 0, 0, 0).getRGB();
 				} else if (pixels[x + y * size[0]] == new Color(255, 0, 0).getRGB()) {
-					newPixels[x+y*size[0]] = new Color(0,0,255).getRGB();
+					newPixels[x + y * size[0]] = new Color(0, 0, 255).getRGB();
 				} else {
 					newPixels[x + y * size[0]] = pixels[x + y * size[0]];
 				}

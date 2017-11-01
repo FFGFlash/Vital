@@ -1,6 +1,7 @@
 package me.negative3.vital.game.framework;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
@@ -68,8 +69,22 @@ public abstract class GameObject {
 		}
 		return false;
 	}
+	
+	public Dimension getColliderSize() {
+		return new Dimension(width, height);
+	}
+	
+	public int[] getColliderPosition() {
+		return new int[] { (int) x, (int) y };
+	}
 
 	public Rectangle getCollider(Collision c) {
+		
+		int width = getColliderSize().width;
+		int height = getColliderSize().height;
+		int x = getColliderPosition()[0];
+		int y = getColliderPosition()[1];
+		
 		switch (c) {
 		case BOTTOM:
 			return new Rectangle((int) (x + 5), (int) (y + height / 2), width - 10, height / 2);
